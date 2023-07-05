@@ -41,12 +41,24 @@ pipeline{
             }
         }
 
-        stage("Echo Bug"){
+        stage("Sonarqube Analysis") {
             steps {
                 script {
-                    sh "echo 'Salaam, reached...'"
+                    withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') {
+                        sh "mvn sonar:sonar"
+                    }
                 }
             }
+
+        }
+
+        stage("Quality Gate") {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+                }
+            }
+
         }
 
         stage("Build & Push Docker Image"){
@@ -64,12 +76,13 @@ pipeline{
             }
         }
 
-        stage("Echo Bug2"){
+        stage("Trivy Scan") {
             steps {
                 script {
-                    sh "echo 'Salaam, reached2...'"
+		   sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image dmancloud/complete-prodcution-e2e-pipeline:1.0.0-22 --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table')
                 }
             }
+
         }
 
         stage ('Cleanup Artifacts') {
@@ -90,7 +103,6 @@ pipeline{
         }
     }
 
-    /*
     post {
         failure {
             emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
@@ -103,7 +115,6 @@ pipeline{
                     mimeType: 'text/html',to: "amiolastyle@gmail.com"
           }      
     }
-    */
 
 }
 
