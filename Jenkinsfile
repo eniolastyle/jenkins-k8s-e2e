@@ -64,11 +64,11 @@ pipeline{
         stage("Build & Push Docker Image"){
             steps {
                 script {
-                    docker.withRegistry('', DOCKER_PASS) {
+                    docker.withRegistry('',DOCKER_PASS) {
                         docker_image = docker.build "${IMAGE_NAME}"
                     }
 
-                    docker.withRegistry('', DOCKER_PASS) {
+                    docker.withRegistry('',DOCKER_PASS) {
                         docker_image.push("${IMAGE_TAG}")
                         docker_image.push("latest")
                     }
@@ -94,11 +94,12 @@ pipeline{
         }
     }
 
+    
     post {
         failure {
             emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
-                    mimeType: 'text/html',to: "amiolstyle@gmail.com"
+                    mimeType: 'text/html',to: "amiolastyle@gmail.com"
             }
          success {
                emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
@@ -106,5 +107,6 @@ pipeline{
                     mimeType: 'text/html',to: "amiolastyle@gmail.com"
           }      
     }
+    
 
 }
