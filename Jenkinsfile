@@ -10,7 +10,7 @@ pipeline{
         APP_NAME = "jenkins-k8-e2e"
         RELEASE = "1.0.0"
         DOCKER_USER = "abooumair"
-        DOCKER_PASS = "dockerhub"
+        DOCKER_PASS = 'dockerhub'
         IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
         IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
 	JENKINS_API_TOKEN = credentials('JENKINS_API_TOKEN')
@@ -41,37 +41,33 @@ pipeline{
             }
         }
 
-        /*
-        stage("Sonarqube Analysis"){
+        stage("Echo Bug"){
             steps {
                 script {
-                    withSonarQubeEnv(credentialsId: 'sonar-token') {
-                        sh "mvn sonar:sonar"
-                    }
+                    sh "echo 'Salaam, reached...'"
                 }
             }
         }
-
-        stage("Quality Gate"){
-            steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
-                }
-            }
-        }
-        */
 
         stage("Build & Push Docker Image"){
             steps {
                 script {
-                    docker.withRegistry('',DOCKER_PASS) {
+                    docker.withRegistry('',"${DOCKER_PASS}") {
                         docker_image = docker.build "${IMAGE_NAME}"
                     }
 
-                    docker.withRegistry('',DOCKER_PASS) {
+                    docker.withRegistry('',"${DOCKER_PASS}") {
                         docker_image.push("${IMAGE_TAG}")
                         docker_image.push("latest")
                     }
+                }
+            }
+        }
+
+        stage("Echo Bug2"){
+            steps {
+                script {
+                    sh "echo 'Salaam, reached2...'"
                 }
             }
         }
@@ -88,13 +84,13 @@ pipeline{
         stage("Trigger CD Pipeline"){
             steps {
                 script {
-		    sh "curl -v -k --user admin:${JENKINS_API_TOKEN} -X POST -H 'cache-control: no-cache' -H 'content-type: application/x-www-form-urlencoded' --data 'IMAGE_TAG=${IMAGE_TAG}' 'http://localhost:8080/job/jenkins-k8-e2e-gitops/buildWithParameters?token=gitops-token'"                    
+		            sh "curl -v -k --user admin:${JENKINS_API_TOKEN} -X POST -H 'cache-control: no-cache' -H 'content-type: application/x-www-form-urlencoded' --data 'IMAGE_TAG=${IMAGE_TAG}' 'http://localhost:8080/job/jenkins-k8-e2e-gitops/buildWithParameters?token=gitops-token'"                    
                 }
             }
         }
     }
 
-    
+    /*
     post {
         failure {
             emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
@@ -107,6 +103,27 @@ pipeline{
                     mimeType: 'text/html',to: "amiolastyle@gmail.com"
           }      
     }
-    
+    */
 
 }
+
+
+        // /*
+        // stage("Sonarqube Analysis"){
+        //     steps {
+        //         script {
+        //             withSonarQubeEnv(credentialsId: 'sonar-token') {
+        //                 sh "mvn sonar:sonar"
+        //             }
+        //         }
+        //     }
+        // }
+
+        // stage("Quality Gate"){
+        //     steps {
+        //         script {
+        //             waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
+        //         }
+        //     }
+        // }
+        // */
